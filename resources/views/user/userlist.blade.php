@@ -12,27 +12,15 @@
                         @csrf
 
                         <div class="container">
-                            <div class="">
-                                @error('name')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                            <div class="">
-                                @error('email')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                            <div class="">
-                                @error('createdfrom')
-                                    <span class="invalid-feedback" role="alert" style="display:block;">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
+                            @if ($errors->any())
+                                <div>
+                                    @foreach ($errors->all() as $error)
+                                        <span class="invalid-feedback display-block" role="alert">
+                                            <strong>{{ $error }}</strong>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
                             <div class="mb-5">
                                 <input id="name" type="text" class="col-10 col-sm-2 mb-2 pl-1 @error('name') is-invalid @enderror" name="name" value="{{ old('name', session('name-search', '')) }}" autocomplete="name" placeholder="名">
                                 <input id="email" type="text" class="col-10 col-sm-2 mb-2 pl-1 @error('email') is-invalid @enderror" name="email" value="{{ old('email', session('email-search', '')) }}" autocomplete="email" placeholder="メール">
@@ -91,13 +79,12 @@
     </div>
 </div>
 
-
 <div id="deleteModal" class="modal" role="dialog">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <!-- Modal content-->
         <form action="" id="deleteForm" method="POST">
             <div class="modal-content">
-            @csrf
+                @csrf
                 <div class="modal-header">
                     <h4 class="modal-title">確認</h4>
                     <button type="button" class="close my-0 py-0" data-dismiss="modal">&times;</button>

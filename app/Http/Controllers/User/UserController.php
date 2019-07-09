@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-use Log;
 
 class UserController extends Controller
 {
@@ -58,7 +57,7 @@ class UserController extends Controller
     {
         //clear the previous user registration info stored on session.
         $this->userServiceInterface->clear($request);
-        log::info($request->session()->all());
+
         return redirect()->route('register');
     }
 
@@ -70,8 +69,6 @@ class UserController extends Controller
      */
     public function registerConfirm(Request $request)
     {
-        log::info('confirm method: ');
-
         Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
@@ -85,7 +82,6 @@ class UserController extends Controller
 
         //store the request data on session to show at confirm page
         $this->userServiceInterface->registerConfirm($request);
-        log::info($request->session()->all());
 
         return view('auth.register_confirm');
     }
@@ -99,10 +95,9 @@ class UserController extends Controller
      */
     public function back(Request $request, $page)
     {
-        log::info('back method: ');
-
         //delete the uploaded image as user do cancel
         $this->userServiceInterface->back($request, $page);
+
         return redirect()->route($page);
     }
 
@@ -114,8 +109,8 @@ class UserController extends Controller
      */
     public function create(Request $request)
     {
-        log::info('create method: ');
         $user = $this->userServiceInterface->create($request);
+
         return redirect($this->redirectTo);
     }
 
@@ -127,10 +122,9 @@ class UserController extends Controller
      */
     public function getList(Request $request)
     {
-        log::info('getList method: ');
         $this->userServiceInterface->clearSearch($request);
         $users = $this->userServiceInterface->getUserList();
-        log::info($request->session()->all());
+
         return view('user.userlist', ['users' => $users]);
     }
 
@@ -148,6 +142,7 @@ class UserController extends Controller
             'createdfrom' => 'nullable|date',
             'createdto' => 'nullable|date',
         ]);
+
         $validator->after(function ($validator) use ($request) {
             if ($request->filled('createdfrom') && $request->filled('createdto')) {
                 if ($request->input('createdto') <= $request->input('createdfrom')) {
@@ -161,7 +156,7 @@ class UserController extends Controller
             return redirect()->back()->withInput()->withErrors($validator);
         }
         $users = $this->userServiceInterface->search($request);
-        log::info($request->session()->all());
+
         return view('user.userlist', ['users' => $users]);
     }
 
@@ -174,8 +169,6 @@ class UserController extends Controller
      */
     public function showProfile(Request $request, $id)
     {
-        log::info('showProfile method: ');
-
         $user = $this->userServiceInterface->showProfile($request, $id);
 
         return view('user.profile', ['user' => $user]);
@@ -190,8 +183,6 @@ class UserController extends Controller
      */
     public function prepareUpdateForm(Request $request, $id)
     {
-        log::info('prepareUpdateForm method: ');
-
         $user = $this->userServiceInterface->prepareUpdateForm($request, $id);
         return view('user.update');
     }
@@ -204,8 +195,6 @@ class UserController extends Controller
      */
     public function updateConfirm(Request $request)
     {
-        log::info('confirm method: ');
-
         Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:users,name,' . session('id'),
             'email' => 'required|string|email|max:255|unique:users,email,' . session('id'),
@@ -218,6 +207,7 @@ class UserController extends Controller
 
         //save form data to confirm after edit
         $this->userServiceInterface->updateConfirm($request);
+
         return view('user.update_confirm');
     }
 
@@ -229,8 +219,6 @@ class UserController extends Controller
      */
     public function update(Request $request)
     {
-        log::info('update method: ');
-
         $this->userServiceInterface->update($request);
 
         if (Auth::user()->type) {
@@ -248,7 +236,6 @@ class UserController extends Controller
      */
     public function delete($id)
     {
-        log::info('delete method: ' . $id);
         $this->userServiceInterface->delete($id);
 
         return redirect()->back();
@@ -262,8 +249,6 @@ class UserController extends Controller
      */
     public function changePassword(Request $request)
     {
-        log::info('change pwd method: ');
-
         $validator = Validator::make($request->all(), [
             'current-password' => ['required', 'string'],
             'new-password' => ['required', 'string', 'min:8'],
@@ -283,7 +268,6 @@ class UserController extends Controller
             }
         });
         if ($validator->fails()) {
-            //log::info($validator->errors());
             return redirect()->back()->withErrors($validator);
         }
 

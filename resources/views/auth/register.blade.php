@@ -5,7 +5,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header"><span style="font-size: 16px">{{ __('ユーザー情報登録') }}</span></div>
+                <div class="card-header"><span>{{ __('ユーザー情報登録') }}</span></div>
 
                 <div class="card-body">
                     <form method="POST" action="{{ route('user.reg.confirm') }}" enctype="multipart/form-data">
@@ -124,15 +124,15 @@
                             <label for="filename" class="col-md-4 col-form-label text-md-right">{{ __('プロフィール') }}</label>
 
                             <div class="col-md-6">
-                                <input type="text" id="filename" class="border text-secondary" style="border-color: #ced4da;" placeholder="選択されていません" readonly />
+                                <input type="text" id="filename" class="border text-secondary" placeholder="選択されていません" readonly />
 
-                                <label for="profile" class="border border-secondary" style="background-color: #e1e1e1;">
+                                <label for="profile" class="border border-secondary file-choose">
                                     ファイルを選択
-                                    <input id="profile" type="file" name="profile" style="display:none;">
+                                    <input id="profile" type="file" name="profile" class="display-none">
                                 </label>
 
                                 @error('profile')
-                                    <span class="invalid-feedback" role="alert" style="display:block;">
+                                    <span class="invalid-feedback display-block" role="alert">
                                         <strong>{{ $message }}</strong>
                                     </span>
                                 @enderror
@@ -141,10 +141,10 @@
 
                         <div class="form-group row pt-4">
                             <div class="mx-auto">
-                                <button type="submit" class="btn btn-primary mr-3 px-0" style="width: 100px">
+                                <button type="submit" class="btn btn-primary mr-3 px-0">
                                     {{ __('確認') }}
                                 </button>
-                                <button type="button" id="reset" class="btn btn-default px-0" style="width: 100px">
+                                <button type="button" id="reset" class="btn btn-default px-0">
                                     {{ __('クリア') }}
                                 </button>
                             </div>

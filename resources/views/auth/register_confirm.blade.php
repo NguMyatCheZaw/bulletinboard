@@ -5,7 +5,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header"><span style="font-size: 16px">{{ __('ユーザー情報登録の確認') }}</span></div>
+                <div class="card-header"><span>{{ __('ユーザー情報登録の確認') }}</span></div>
 
                 <div class="card-body">
                     <form method="POST" action="{{ route('user.create') }}">
@@ -38,14 +38,9 @@
 
                             <div class="col-md-6 bg-light">
                                 <label class="col-form-label">
-                                    <?php
-if (empty(session('password'))) {
-    echo "";
-} else {
-    $hidden_password = preg_replace("|.|", "*", session('password'));
-    echo "$hidden_password";
-}
-?>
+                                    @if (!empty(session('password')))
+                                        <?php echo preg_replace("|.|", "*", session('password')); ?>
+                                    @endif
                                 </label>
                             </div>
                         </div>
@@ -84,10 +79,10 @@ if (empty(session('password'))) {
 
                         <div class="form-group row pt-4">
                             <div class="mx-auto">
-                                <button type="submit" class="btn btn-primary mr-3 px-0" style="width: 100px">
+                                <button type="submit" class="btn btn-primary mr-3 px-0">
                                     {{ __('登録') }}
                                 </button>
-                                <a class="btn btn-default px-0" href="{{ url('back/register') }}" style="width: 100px;">{{ __('キャンセル') }}</a>
+                                <a class="btn btn-default px-0" href="{{ url('back/register') }}">{{ __('キャンセル') }}</a>
                             </div>
                         </div>
                     </form>

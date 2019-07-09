@@ -13,28 +13,16 @@
 
                         <div class="form-group row">
                             <div class="col-md-6 mx-auto">
-                                @error('csv-file')
-                                    <span class="invalid-feedback" role="alert" style="display:block;">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
+                                @if ($errors->any())
+                                    <div>
+                                        @foreach ($errors->all() as $error)
+                                        <span class="invalid-feedback" role="alert" style="display:block;">
+                                            <strong>{{ $error }}</strong>
+                                        </span>
+                                        @endforeach
+                                    </div>
+                                @endif
                                 <input id="csv" type="file" class="form-control pb-5" name="csv-file">
-
-                                @error('post_title')
-                                    <span class="invalid-feedback" role="alert" style="display:block;">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                                @error('description')
-                                    <span class="invalid-feedback" role="alert" style="display:block;">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                                @error('status')
-                                    <span class="invalid-feedback" role="alert" style="display:block;">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
                             </div>
                         </div>
 
