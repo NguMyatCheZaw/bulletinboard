@@ -15,7 +15,7 @@
                             <label for="name" class="col-md-4 col-form-label text-md-right">{{ __('ユーザー名') }}</label>
 
                             <div class="col-md-6">
-                                <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" name="name" value="{{ old('name', session('name')) }}" required autocomplete="name" autofocus>
+                                <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" name="name" value="{{ old('name', session('register-info.name')) }}" required autocomplete="name" autofocus>
 
                                 @error('name')
                                     <span class="invalid-feedback" role="alert">
@@ -29,7 +29,7 @@
                             <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('メールアドレス') }}</label>
 
                             <div class="col-md-6">
-                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email', session('email')) }}" required autocomplete="email">
+                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email', session('register-info.email')) }}" required autocomplete="email">
 
                                 @error('email')
                                     <span class="invalid-feedback" role="alert">
@@ -66,8 +66,8 @@
 
                             <div class="col-md-6">
                                 <select id="type" class="form-control @error('type') is-invalid @enderror" name="type">
-                                    <option class="admin" value="0" {{ old('type', session('type')) ? '' : 'selected' }}>管理者</option>
-                                    <option value="1" {{ old('type', session('type')) ? 'selected' : '' }}>メンバー</option>
+                                    <option class="admin" value="0" {{ old('type', session('register-info.type')) ? '' : 'selected' }}>{{ config('constants.userrole.admin') }}</option>
+                                    <option value="1" {{ old('type', session('register-info.type')) ? 'selected' : '' }}>{{ config('constants.userrole.member') }}</option>
                                 </select>
 
                                 @error('type')
@@ -82,7 +82,7 @@
                             <label for="phone" class="col-md-4 col-form-label text-md-right">{{ __('電話番号') }}</label>
 
                             <div class="col-md-6">
-                                <input id="phone" type="text" class="form-control @error('phone') is-invalid @enderror" name="phone" value="{{ old('phone', session('phone')) }}" autocomplete="phone">
+                                <input id="phone" type="text" class="form-control @error('phone') is-invalid @enderror" name="phone" value="{{ old('phone', session('register-info.phone')) }}" autocomplete="phone">
 
                                 @error('phone')
                                     <span class="invalid-feedback" role="alert">
@@ -96,7 +96,7 @@
                             <label for="dob" class="col-md-4 col-form-label text-md-right">{{ __('誕生日') }}</label>
 
                             <div class="col-md-6">
-                                <input id="dob" type="text" class="datepick form-control @error('dob') is-invalid @enderror" name="dob" value="{{ old('dob', session('dob')) }}" autocomplete="dob">
+                                <input id="dob" type="text" class="datepick form-control @error('dob') is-invalid @enderror" name="dob" value="{{ old('dob', session('register-info.dob')) }}" autocomplete="dob">
 
                                 @error('dob')
                                     <span class="invalid-feedback" role="alert">
@@ -110,7 +110,7 @@
                             <label for="address" class="col-md-4 col-form-label text-md-right">{{ __('住所') }}</label>
 
                             <div class="col-md-6">
-                                <textarea id="address" class="form-control @error('address') is-invalid @enderror" name="address" rows=4>{{ old('address', session('address')) }}</textarea>
+                                <textarea id="address" class="form-control @error('address') is-invalid @enderror" name="address" rows=4>{{ old('address', session('register-info.address')) }}</textarea>
 
                                 @error('address')
                                     <span class="invalid-feedback" role="alert">
@@ -128,7 +128,7 @@
 
                                 <label for="profile" class="border border-secondary file-choose">
                                     ファイルを選択
-                                    <input id="profile" type="file" name="profile" class="display-none">
+                                    <input id="profile" type="file" name="profile" class="display-none" onchange="show_image_preview(this);">
                                 </label>
 
                                 @error('profile')
@@ -139,9 +139,16 @@
                             </div>
                         </div>
 
+                        <div class="form-group row">
+                            <div class="offset-md-4 col-md-6">
+                                <img id="preview" src="#" class="display-none"/>
+                                <span id="close" class="button-close display-none">&times;</span>
+                            </div>
+                        </div>
+
                         <div class="form-group row pt-4">
                             <div class="mx-auto">
-                                <button type="submit" class="btn btn-primary mr-3 px-0">
+                                <button type="submit" class="a btn btn-primary mr-3 px-0">
                                     {{ __('確認') }}
                                 </button>
                                 <button type="button" id="reset" class="btn btn-default px-0">
@@ -168,20 +175,44 @@
      $('#filename').bind('keyup, keydown, keypress', function() {
          return false;
      });
-     /* $('#filename, #btn').click(function() {
-         $('#profile').trigger('click');
-     }); */
+
  });
+
+ function show_image_preview(input) {
+    if (input.files && input.files[0]) {
+        //Initialize file reader
+        var reader = new FileReader();
+        //Onload event of file reader assign target image to the preview
+        reader.onload = function (e) {
+            $('#preview').attr('src', e.target.result).removeClass('display-none').addClass('image-preview');
+            $('#close').removeClass('display-none');
+        };
+        //Initiate read
+        reader.readAsDataURL(input.files[0]);
+    }
+ }
 </script>
 
-<!-- form reset -->
 <script type="text/javascript">
+    /* form reset */
     $("#reset").on("click", function () {
         $("input:text").val(null);
         $("input:password").val(null);
         $("#email").val(null);
         $("#address").val(null);
         $(".admin").prop('selected', 'selected');
+        close_preview();
     });
+
+    $("#close").on("click", function () {
+        close_preview();
+    });
+
+    function close_preview() {
+        $('#filename').val(null);
+        $("#profile").val(null);
+        $('#preview').attr('src', '#').removeClass('image-preview').addClass('display-none');
+        $('#close').addClass('display-none');
+    }
 </script>
 @endsection

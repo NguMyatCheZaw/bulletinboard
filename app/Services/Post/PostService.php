@@ -9,7 +9,6 @@ use App\Imports\PostsImport;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Log;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
@@ -31,7 +30,7 @@ class PostService implements PostServiceInterface
      * Get post list by all users.
      *
      * @param string $searchKey
-     * @return \Illuminate\Http\Response
+     * @return App\Models\Post
      */
     public function getListbyAll($searchKey)
     {
@@ -43,7 +42,7 @@ class PostService implements PostServiceInterface
      *
      * @param int $id
      * @param string $searchKey
-     * @return \Illuminate\Http\Response
+     * @return App\Models\Post
      */
     public function getListbyUser($id, $searchKey)
     {
@@ -56,13 +55,14 @@ class PostService implements PostServiceInterface
      * @param \Illuminate\Http\Request $request
      * @return
      */
-    public function createConfirm(Request $request)
+    public function createConfirm($request)
     {
         // store on session to show at confirm page
         // and if cancel, to be back to create form with input data.
-        $request->session()->put('title', $request->input('title'));
-        $request->session()->put('description', $request->input('description'));
-        log::info(session()->all());
+        $post = new Post;
+        $post->title = $request->input('title');
+        $post->description = $request->input('description');
+        $request->session()->put('new-post', $post);
     }
 
     /**
@@ -71,52 +71,51 @@ class PostService implements PostServiceInterface
      * @param \Illuminate\Http\Request $request
      * @return
      */
-    public function create(Request $request)
+    public function create($request)
     {
-        $this->postDao->create();
+        $result = $this->postDao->create();
 
         //clear the previous post information stored on session.
-        $this->clear($request);
-        log::info(session()->all());
+        $this->clear($request, ['new-post']);
+
+        return $result;
     }
 
     /**
      * Handle the old information on session and show the form for editing the specified resource.
      *
      * @param \Illuminate\Http\Request $request
-     * @param int  $id
+     * @param int $id
      * @return
      */
-    public function prepareUpdateForm(Request $request, $id)
+    public function prepareUpdateForm($request, $id)
     {
         //clear the previous post information stored on session.
-        $this->clear($request);
+        $this->clear($request, ['update-post']);
 
-        $user = $this->postDao->getByID($id);
+        $result = $this->postDao->getByID($id);
 
         //to show DB data in update form for edit
-        $request->session()->put('pid', $user->id);
-        $request->session()->put('title', $user->title);
-        $request->session()->put('description', $user->description);
-        $request->session()->put('pstatus', $user->status);
-        log::info(session()->all());
+        $request->session()->put('update-post', $result['data']);
+
+        return $result;
     }
 
     /**
-     * Validate the request and go to confirm page.
+     * Store the update info on session.
      *
      * @param \Illuminate\Http\Request $request
      * @return
      */
-    public function updateConfirm(Request $request)
+    public function updateConfirm($request)
     {
         // store on session to show at confirm page
         // and if cancel, to be back to update form with input data.
-        $request->session()->put('title', $request->input('title'));
-        $request->session()->put('description', $request->input('description'));
-        $request->session()->put('pstatus', $request->input('status'));
-        log::info(session()->all());
-
+        $update = session('update-post');
+        $update->title = $request->input('title');
+        $update->description = $request->input('description');
+        $update->status = $request->input('status');
+        $request->session()->put('update-post', $update);
     }
 
     /**
@@ -125,24 +124,25 @@ class PostService implements PostServiceInterface
      * @param \Illuminate\Http\Request $request
      * @return
      */
-    public function update(Request $request)
+    public function update($request)
     {
         $update = new Post;
-        $update->id = session('pid');
-        $update->title = session('title');
-        $update->description = session('description');
-        if (session('pstatus')) {
+        $update->id = session('update-post.id');
+        $update->title = session('update-post.title');
+        $update->description = session('update-post.description');
+        if (session('update-post.status')) {
             $update->status = 1;
         } else {
             $update->status = 0;
         }
         $update->updated_user_id = Auth::id();
 
-        $this->postDao->update($update);
+        $result = $this->postDao->update($update);
 
         //clear the previous user registration info stored on session.
-        $this->clear($request);
-        log::info($request->session()->all());
+        $this->clear($request, ['update-post']);
+
+        return $result;
     }
 
     /**
@@ -153,27 +153,27 @@ class PostService implements PostServiceInterface
      */
     public function delete($id)
     {
-        $this->postDao->delete($id);
+        return $this->postDao->delete($id);
     }
 
     /**
      * Delete the old request info on session.
      *
      * @param \Illuminate\Http\Request $request
+     * @param array $attributeList
      * @return
      */
-    public function clear(Request $request)
+    public function clear($request, $attributeList)
     {
-        $request->session()->forget('pid');
-        $request->session()->forget('title');
-        $request->session()->forget('description');
-        $request->session()->forget('pstatus');
+        foreach ($attributeList as $attribute) {
+            $request->session()->forget($attribute);
+        }
     }
 
     /**
      * Upload the csv file and save file contents to db.
      *
-     * @param $uploadedFile
+     * @param File $uploadedFile
      * @return
      */
     public function importCsv($uploadedFile)

@@ -13,10 +13,10 @@
 
                         <div class="form-group row">
                             <div class="col-5 offset-4 offset-sm-5 offset-lg-7 mb-3">
-                            @if (session()->has('new-profile'))
-                                <figure><img class="rounded" src="{{ asset('storage/image/'.session('new-profile')) }}" width="150px" height="150px" /></figure>
+                            @if (session()->has('new-profile-path'))
+                                <figure><img class="rounded" src="{{ asset(session('new-profile-path')) }}" width="150px" height="150px" /></figure>
                             @else
-                                <figure><img class="rounded" src="{{ asset('storage/image/'.session('profile')) }}" width="150px" height="150px" /></figure>
+                                <figure><img class="rounded" src="{{ asset(session('profile-path')) }}" width="150px" height="150px" /></figure>
                             @endif
                             </div>
 
@@ -25,7 +25,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('ユーザー名') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('name') }}</label>
+                                <label class="col-form-label">{{ session('update-info.name') }}</label>
                             </div>
                         </div>
 
@@ -33,7 +33,7 @@
                             <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('メールアドレス') }}</label>
 
                             <div class="col-md-6 bg-light py-2">
-                                <a href="#">{{ session('email') }}</a>
+                                <a href="#">{{ session('update-info.email') }}</a>
                             </div>
                         </div>
 
@@ -41,7 +41,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('ユーザー役割') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('type') ? 'メンバー' : '管理者' }}</label>
+                                <label class="col-form-label">{{ session('update-info.type') ? 'メンバー' : '管理者' }}</label>
                             </div>
                         </div>
 
@@ -49,7 +49,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('電話番号') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('phone') }}</label>
+                                <label class="col-form-label">{{ session('update-info.phone') }}</label>
                             </div>
                         </div>
 
@@ -57,7 +57,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('誕生日') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('dob') }}</label>
+                                <label class="col-form-label">{{ session('update-info.dob') }}</label>
                             </div>
                         </div>
 
@@ -65,7 +65,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('住所') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <address class="col-form-label">{{ session('address') }}</address>
+                                <address class="col-form-label">{{ session('update-info.address') }}</address>
                             </div>
                         </div>
 

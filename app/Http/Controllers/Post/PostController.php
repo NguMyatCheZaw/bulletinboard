@@ -8,7 +8,6 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class PostController extends Controller
@@ -54,7 +53,13 @@ class PostController extends Controller
         //delete the search keyword to be clear the search box.
         $request->session()->forget('search');
 
-        $posts = $this->getPost();
+        $result = $this->getPost();
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
+
+        $posts = $result['data'];
 
         //flash on session to download the result.
         $request->session()->put('download-data', $posts);
@@ -70,14 +75,13 @@ class PostController extends Controller
      */
     public function getPost(string $searchKey = null)
     {
-        log::info('$searchKey.....' . $searchKey);
         if (Auth::user()->type == 0) {
-            $posts = $this->postServiceInterface->getListbyAll($searchKey);
+            $result = $this->postServiceInterface->getListbyAll($searchKey);
         } else {
-            $posts = $this->postServiceInterface->getListbyUser(Auth::id(), $searchKey);
+            $result = $this->postServiceInterface->getListbyUser(Auth::id(), $searchKey);
         }
 
-        return $posts;
+        return $result;
     }
 
     /**
@@ -88,8 +92,13 @@ class PostController extends Controller
      */
     public function search(Request $request)
     {
-        log::info('keyword.....' . $request->input('search'));
-        $posts = $this->getPost($request->input('search'));
+        $result = $this->getPost($request->input('search'));
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
+
+        $posts = $result['data'];
 
         //flash on session to show the search keyword in the search box.
         $request->session()->flash('search', $request->input('search'));
@@ -108,10 +117,8 @@ class PostController extends Controller
      */
     public function prepareCreateForm(Request $request)
     {
-        log::info('prepareCreateForm');
         //clear the previous post information stored on session.
-        $this->postServiceInterface->clear($request);
-        log::info($request->session()->all());
+        $this->postServiceInterface->clear($request, ['new-post']);
 
         return view('post.create');
     }
@@ -129,12 +136,13 @@ class PostController extends Controller
             'description' => 'required|string',
         ]);
         if ($validator->fails()) {
-            log::info($validator->errors());
             return redirect()->back()->withInput()->withErrors($validator);
         }
+
         // store on session to show at confirm page
         // and if cancel, to be back to create form with input data.
         $this->postServiceInterface->createConfirm($request);
+
         return view('post.create_confirm');
     }
 
@@ -146,7 +154,12 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $this->postServiceInterface->create($request);
+        $result = $this->postServiceInterface->create($request);
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
+
         return redirect($this->redirectTo);
     }
 
@@ -159,8 +172,11 @@ class PostController extends Controller
      */
     public function prepareUpdateForm(Request $request, $id)
     {
-        log::info('prepareUpdateForm');
-        $user = $this->postServiceInterface->prepareUpdateForm($request, $id);
+        $result = $this->postServiceInterface->prepareUpdateForm($request, $id);
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
 
         return view('post.update');
     }
@@ -174,13 +190,14 @@ class PostController extends Controller
     public function updateConfirm(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255|unique:posts,title,' . session('pid'),
+            'title' => 'required|string|max:255|unique:posts,title,' . session('update-post.id'),
             'description' => 'required|string',
         ])->validate();
 
         // store on session to show at confirm page
         // and if cancel, to be back to update form with input data.
         $this->postServiceInterface->updateConfirm($request);
+
         return view('post.update_confirm');
     }
 
@@ -192,7 +209,11 @@ class PostController extends Controller
      */
     public function update(Request $request)
     {
-        $this->postServiceInterface->update($request);
+        $result = $this->postServiceInterface->update($request);
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
 
         return redirect($this->redirectTo);
     }
@@ -206,7 +227,12 @@ class PostController extends Controller
      */
     public function destroy($id)
     {
-        $this->postServiceInterface->delete($id);
+        $result = $this->postServiceInterface->delete($id);
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
+
         return redirect()->back();
     }
 
@@ -219,14 +245,9 @@ class PostController extends Controller
     public function import(Request $request)
     {
         if ($request->file('csv-file')) {
-            //custom error messages
-            $messages = [
-                'mimetypes' => 'The file must be a file of type csv.',
-            ];
-
             Validator::make($request->all(), [
-                'csv-file' => 'required|file|max:1500|mimetypes:application/vnd.ms-excel|mimes:csv', //size is specified in kilobytes
-            ], $messages)->validate();
+                'csv-file' => 'required|file|max:1500', //size is specified in kilobytes
+            ])->validate();
 
             $this->postServiceInterface->importCsv($request->file('csv-file'));
         }

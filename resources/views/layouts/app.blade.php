@@ -42,7 +42,7 @@
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav mr-auto">
                         @if (Auth::check())
-                            @if (Auth::user()->type == 0)
+                            @if (Auth::user()->type == config('constants.usertype.admin'))
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ url('/userlist') }}">{{ __('ユーザー一覧') }}</a>
                                 </li>
@@ -74,7 +74,7 @@
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                    @if (Auth::user()->type == 0)
+                                    @if (Auth::user()->type == config('constants.usertype.admin'))
                                         @if (Route::has('register'))
                                             <a class="dropdown-item" href="{{ route('user.reg.index') }}">{{ __('アカウント登録') }}</a>
                                         @endif

@@ -11,6 +11,7 @@
                     <form method="GET" action="{{ route('user.search') }}">
                         @csrf
 
+                        <!-- search section -->
                         <div class="container">
                             @if ($errors->any())
                                 <div>
@@ -22,16 +23,23 @@
                                 </div>
                             @endif
                             <div class="mb-5">
+                                <!-- name search box -->
                                 <input id="name" type="text" class="col-10 col-sm-2 mb-2 pl-1 @error('name') is-invalid @enderror" name="name" value="{{ old('name', session('name-search', '')) }}" autocomplete="name" placeholder="名">
+
+                                <!-- email search box -->
                                 <input id="email" type="text" class="col-10 col-sm-2 mb-2 pl-1 @error('email') is-invalid @enderror" name="email" value="{{ old('email', session('email-search', '')) }}" autocomplete="email" placeholder="メール">
+
+                                <!-- created date search box -->
                                 <input id="createdfrom" type="text" class="datepick col-10 col-sm-2 mb-2 pl-1 @error('createdfrom') is-invalid @enderror" name="createdfrom" value="{{ old('createdfrom', session('from-search', '')) }}" autocomplete="createdfrom" placeholder="作成日(から)">
                                 <input id="createdto" type="text" class="datepick col-10 col-sm-2 mb-2 pl-1 @error('createdto') is-invalid @enderror" name="createdto" value="{{ old('createdto', session('to-search', '')) }}" autocomplete="createdto" placeholder="作成日(に)">
+
                                 <button type="submit" class="btn btn-primary rounded-0" style="width: 100px">
                                     {{ __('検索') }}
                                 </button>
                             </div>
                         </div>
 
+                        <!-- show user list -->
                         <div class="container">
                             <div class="mt-5 mb-2">
                                 <a class="btn btn-primary rounded-0 my-2 px-2" href="{{ route('user.reg.index') }}" style="width: 100px;">{{ __('追加') }}</a>

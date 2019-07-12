@@ -8,6 +8,9 @@
                 <div class="card-header"><span style="font-size: 16px">{{ __('新規投稿追加の確認') }}</span></div>
 
                 <div class="card-body">
+                @if (session('error'))
+<div class="alert alert-danger">{{ session('error') }}</div>
+@endif
                     <form method="POST" action="{{ url('/post/create') }}">
                         @csrf
 
@@ -15,7 +18,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('タイトル') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('title', '')}}</label>
+                                <label class="col-form-label">{{ session('new-post.title', '')}}</label>
                             </div>
                         </div>
 
@@ -23,7 +26,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('内容') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('description', '')}}</label>
+                                <label class="col-form-label">{{ session('new-post.description', '')}}</label>
                             </div>
                         </div>
 

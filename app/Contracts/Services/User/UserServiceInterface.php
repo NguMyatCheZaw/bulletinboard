@@ -82,14 +82,6 @@ interface UserServiceInterface
     public function changePassword($password);
 
     /**
-     * delete the old registraion info on session
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return
-     */
-    public function clear($request);
-
-    /**
      * back to the previous page
      *
      * @param \Illuminate\Http\Request $request
@@ -97,4 +89,22 @@ interface UserServiceInterface
      * @return
      */
     public function back($request, $page);
+
+    /**
+     * delete the given attribute on session
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param array $attributeList
+     * @return
+     */
+    public function clear($request, $attributeList);
+
+    /**
+     * delete the search keyword on session
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return
+     */
+    public function clearSearch($request);
+
 }

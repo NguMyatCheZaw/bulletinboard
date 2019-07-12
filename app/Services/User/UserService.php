@@ -8,7 +8,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Log;
 
 class UserService implements UserServiceInterface
 {
@@ -29,17 +28,18 @@ class UserService implements UserServiceInterface
      * @param \Illuminate\Http\Request $request
      * @return
      */
-    public function registerConfirm(Request $request)
+    public function registerConfirm($request)
     {
         // store on session to show at confirm page
         // and if cancel, to be back to create form with input data.
-        $request->session()->put('name', $request->input('name'));
-        $request->session()->put('email', $request->input('email'));
-        $request->session()->put('password', $request->input('password'));
-        $request->session()->put('type', $request->input('type'));
-        $request->session()->put('phone', $request->input('phone'));
-        $request->session()->put('dob', $request->input('dob'));
-        $request->session()->put('address', $request->input('address'));
+        $registerUser = new User;
+        $registerUser->name = $request->input('name');
+        $registerUser->email = $request->input('email');
+        $registerUser->password = $request->input('password');
+        $registerUser->type = $request->input('type');
+        $registerUser->phone = $request->input('phone');
+        $registerUser->dob = $request->input('dob');
+        $registerUser->address = $request->input('address');
 
         //save the profile picture and store file name on session
         if ($request->hasFile('profile')) {
@@ -52,10 +52,12 @@ class UserService implements UserServiceInterface
             //upload the image
             $uploadedFile->storeAs('public/image', $filename);
             //store file name on session.
-            $request->session()->put('profile', $filename);
+            $registerUser->profile = $filename;
+            $request->session()->put('profile-path', config('constants.profile-path') . $filename);
             //store file extension on session.
             $request->session()->put('profile-extension', $ext);
         }
+        $request->session()->put('register-info', $registerUser);
     }
 
     /**
@@ -64,30 +66,40 @@ class UserService implements UserServiceInterface
      * @param \Illuminate\Http\Request $request
      * @return App\Models\User $user
      */
-    public function create(Request $request)
+    public function create($request)
     {
-        $user = $this->userDao->create();
-        log::info('*** created user ***');
-        log::info($user);
+        $result = $this->userDao->create();
+
+        if ($result['status'] == -9) {
+            return $result;
+        }
+
+        $user = $result['data'];
+
         //change the profile name by user id
         //make the file name
         $filename = $user->id . '.' . session('profile-extension');
         //rename the profile image
-        Storage::move('public\\image\\' . session('profile'), 'public\\image\\' . $filename);
+        Storage::move('public\\image\\' . session('register-info.profile'), 'public\\image\\' . $filename);
         $update = new User;
         $update->id = $user->id;
         //prevent from overwritten by the model's default value
         $update->type = $user->type;
         $update->profile = $filename;
         $update->updated_at = $user->updated_at;
-        $this->userDao->update($update);
-        //event(new Registered($user));
+        $result = $this->userDao->update($update);
+
+        if ($result['status'] == -9) {
+            return $result;
+        }
 
         //clear the previous user registration info stored on session.
-        $this->clear($request);
-        log::info($request->session()->all());
+        $this->clear($request, ['register-info', 'profile-path', 'profile-extension']);
+
         $user->profile = $filename;
-        return $user;
+        $result['data'] = $user;
+
+        return $result;
     }
 
     /**
@@ -106,7 +118,7 @@ class UserService implements UserServiceInterface
      * @param \Illuminate\Http\Request $request
      * @return App\Models\User $users
      */
-    public function search(Request $request)
+    public function search($request)
     {
         $request->session()->flash('name-search', $request->input('name'));
         $request->session()->flash('email-search', $request->input('email'));
@@ -122,16 +134,14 @@ class UserService implements UserServiceInterface
      * @param int id
      * @return App\Models\User $user
      */
-    public function showProfile(Request $request, $id)
+    public function showProfile($request, $id)
     {
         //clear the previous user info stored on session.
-        $this->clear($request);
-        $request->session()->forget('new-profile');
-        $request->session()->forget('new-profile-extension');
-        log::info($request->session()->all());
+        $this->clear($request, ['update-info', 'profile-path', 'new-profile', 'new-profile-path', 'new-profile-extension']);
 
-        $user = $this->userDao->getByID($id);
-        return $user;
+        $result = $this->userDao->getByID($id);
+
+        return $result;
     }
 
     /**
@@ -141,25 +151,20 @@ class UserService implements UserServiceInterface
      * @param int $id
      * @return
      */
-    public function prepareUpdateForm(Request $request, $id)
+    public function prepareUpdateForm($request, $id)
     {
         //clear the previous user info stored on session.
-        $this->clear($request);
-        $request->session()->forget('new-profile');
-        $request->session()->forget('new-profile-extension');
+        $this->clear($request, ['update-info', 'profile-path', 'new-profile', 'new-profile-path', 'new-profile-extension']);
 
-        $user = $this->userDao->getByID($id);
+        $result = $this->userDao->getByID($id);
+
+        $user = $result['data'];
 
         //to show DB data in update form for edit
-        $request->session()->put('id', $user->id);
-        $request->session()->put('name', $user->name);
-        $request->session()->put('email', $user->email);
-        $request->session()->put('type', $user->type);
-        $request->session()->put('phone', $user->phone);
-        $request->session()->put('dob', $user->dob);
-        $request->session()->put('address', $user->address);
-        $request->session()->put('profile', $user->profile);
-        log::info($request->session()->all());
+        $request->session()->put('update-info', $user);
+        $request->session()->put('profile-path', config('constants.profile-path') . $user->profile);
+
+        return $result;
     }
 
     /**
@@ -171,13 +176,14 @@ class UserService implements UserServiceInterface
     public function updateConfirm(Request $request)
     {
         //save form data to confirm after edit
-        //$request->session()->put('id', $user->id);
-        $request->session()->put('name', $request->input('name'));
-        $request->session()->put('email', $request->input('email'));
-        $request->session()->put('type', $request->input('type'));
-        $request->session()->put('phone', $request->input('phone'));
-        $request->session()->put('dob', $request->input('dob'));
-        $request->session()->put('address', $request->input('address'));
+        $updateinfo = session('update-info');
+        $updateinfo->name = $request->input('name');
+        $updateinfo->email = $request->input('email');
+        $updateinfo->type = $request->input('type');
+        $updateinfo->phone = $request->input('phone');
+        $updateinfo->dob = $request->input('dob');
+        $updateinfo->address = $request->input('address');
+        $request->session()->put('update-info', $updateinfo);
 
         //save the profile picture and store file name on session
         if ($request->hasFile('profile')) {
@@ -186,15 +192,15 @@ class UserService implements UserServiceInterface
             //get just extension.
             $ext = $uploadedFile->getClientOriginalExtension();
             //make a temporary file name
-            $filename = session('id') . '-temp.' . $ext;
+            $filename = session('update-info.id') . '-temp.' . $ext;
             //upload the image
             $uploadedFile->storeAs('public/image', $filename);
             //store file name on session.
             $request->session()->put('new-profile', $filename);
+            $request->session()->put('new-profile-path', config('constants.profile-path') . $filename);
             //store file extension on session.
             $request->session()->put('new-profile-extension', $ext);
         }
-        log::info($request->session()->all());
     }
 
     /**
@@ -203,39 +209,41 @@ class UserService implements UserServiceInterface
      * @param \Illuminate\Http\Request $request
      * @return
      */
-    public function update(Request $request)
+    public function update($request)
     {
         //delete the old profile and rename new profile after confirmation success
         //make the file name.
-        $filename = session('id') . '.' . session('new-profile-extension');
-
+        $filename = session('update-info.id') . '.' . session('new-profile-extension');
         $update = new User;
-        $update->id = session('id');
-        $update->name = session('name');
-        $update->email = session('email');
-        $update->type = session('type');
-        $update->phone = session('phone');
-        $update->dob = session('dob');
-        $update->address = session('address');
+        $update->id = session('update-info.id');
+        $update->name = session('update-info.name');
+        $update->email = session('update-info.email');
+        $update->type = session('update-info.type');
+        $update->phone = session('update-info.phone');
+        $update->dob = session('update-info.dob');
+        $update->address = session('update-info.address');
         $update->profile = $filename;
         $update->updated_user_id = Auth::id();
 
-        $this->userDao->update($update);
+        $result = $this->userDao->update($update);
 
         if (session()->has('new-profile')) {
-            //delete the old image.
-            $oldProfile = session('profile');
-            Storage::delete("public/image/{$oldProfile}"); //no error if the file is not found.
+            if ($result['status'] == -1) {
+                //delete the old image.
+                $oldProfile = session('update-info.profile');
+                Storage::delete("public/image/{$oldProfile}"); //no error if the file is not found.
 
-            //rename the new profile.
-            Storage::move('public\\image\\' . session('new-profile'), 'public\\image\\' . $filename);
+                //rename the new profile.
+                Storage::move('public\\image\\' . session('new-profile'), 'public\\image\\' . $filename);
+            } else {
+                Storage::delete("public/image/" . session('new-profile'));
+            }
         }
 
         //clear the previous user registration info stored on session.
-        $this->clear($request);
-        $request->session()->forget('new-profile');
-        $request->session()->forget('new-profile-extension');
-        log::info($request->session()->all());
+        $this->clear($request, ['update-info', 'profile-path', 'new-profile', 'new-profile-path', 'new-profile-extension']);
+
+        return $result;
     }
 
     /**
@@ -246,7 +254,7 @@ class UserService implements UserServiceInterface
      */
     public function delete($id)
     {
-        $this->userDao->delete($id);
+        return $this->userDao->delete($id);
     }
 
     /**
@@ -257,27 +265,7 @@ class UserService implements UserServiceInterface
      */
     public function changePassword($password)
     {
-        $this->userDao->changePassword($password);
-    }
-
-    /**
-     * Delete the old registraion info on session.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return
-     */
-    public function clear(Request $request)
-    {
-        $request->session()->forget('id');
-        $request->session()->forget('name');
-        $request->session()->forget('email');
-        $request->session()->forget('password');
-        $request->session()->forget('type');
-        $request->session()->forget('phone');
-        $request->session()->forget('dob');
-        $request->session()->forget('address');
-        $request->session()->forget('profile');
-        $request->session()->forget('profile-extension');
+        return $this->userDao->changePassword($password);
     }
 
     /**
@@ -287,20 +275,33 @@ class UserService implements UserServiceInterface
      * @param string $page
      * @return
      */
-    public function back(Request $request, $page)
+    public function back($request, $page)
     {
         if (strcmp($page, 'updateform') == 0) {
             //delete the uploaded image as user do cancel.
-            $profile = session('new-profile');
-            Storage::delete("public/image/{$profile}");
+            $profile = "public/image/" . session('new-profile');
+            Storage::delete($profile);
 
             //clear the user uploaded profile info on session
-            $request->session()->forget('new-profile');
-            $request->session()->forget('new-profile-extension');
+            $this->clear($request, ['new-profile', 'new-profile-path', 'new-profile-extension']);
         } elseif (strcmp($page, 'register') == 0) {
             //delete the uploaded image as user do cancel.
-            $profile = session('profile');
-            Storage::delete("public/image/{$profile}");
+            $profile = "public/image/" . session('register-info.profile');
+            Storage::delete($profile);
+        }
+    }
+
+    /**
+     * Delete the old registraion info on session.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param array $attributeList
+     * @return
+     */
+    public function clear($request, $attributeList)
+    {
+        foreach ($attributeList as $attribute) {
+            session()->forget($attribute);
         }
     }
 
@@ -310,7 +311,7 @@ class UserService implements UserServiceInterface
      * @param \Illuminate\Http\Request $request
      * @return
      */
-    public function clearSearch(Request $request)
+    public function clearSearch($request)
     {
         $request->session()->forget('name-search');
         $request->session()->forget('email-search');

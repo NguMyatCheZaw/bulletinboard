@@ -15,7 +15,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('タイトル') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('title') }}</label>
+                                <label class="col-form-label">{{ session('update-post.title') }}</label>
                             </div>
                         </div>
 
@@ -23,7 +23,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('内容') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('description') }}</label>
+                                <label class="col-form-label">{{ session('update-post.description') }}</label>
                             </div>
                         </div>
 
@@ -31,7 +31,7 @@
                             <label class="col-4 col-form-label text-md-right">{{ __('ステータス') }}</label>
 
                             <div class="col-6 px-md-0">
-                                <input class="align-bottom" type="checkbox" name="status" id="status" {{ session('status') ? 'checked' : '' }} disabled>
+                                <input class="align-bottom" type="checkbox" name="status" id="status" {{ session('update-post.status') ? 'checked' : '' }} disabled>
                             </div>
                         </div>
 

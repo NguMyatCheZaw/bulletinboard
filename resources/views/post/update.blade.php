@@ -15,7 +15,7 @@
                             <label for="title" class="col-md-4 col-form-label text-md-right">{{ __('タイトル') }}</label>
 
                             <div class="col-md-6">
-                                <input id="title" type="text" class="form-control @error('title') is-invalid @enderror" name="title" value="{{ old('title', session('title')) }}" required autocomplete="title" autofocus>
+                                <input id="title" type="text" class="form-control @error('title') is-invalid @enderror" name="title" value="{{ old('title', session('update-post.title')) }}" required autocomplete="title" autofocus>
 
                                 @error('title')
                                     <span class="invalid-feedback" role="alert">
@@ -29,7 +29,7 @@
                             <label for="description" class="col-md-4 col-form-label text-md-right">{{ __('内容') }}</label>
 
                             <div class="col-md-6">
-                                <textarea id="description" class="form-control @error('description') is-invalid @enderror" name="description" rows=4>{{ old('description', session('description')) }}</textarea>
+                                <textarea id="description" class="form-control @error('description') is-invalid @enderror" name="description" rows=4>{{ old('description', session('update-post.description')) }}</textarea>
 
                                 @error('description')
                                     <span class="invalid-feedback" role="alert">
@@ -43,7 +43,7 @@
                             <label for="status" class="col-6 col-sm-4 col-form-label text-md-right">{{ __('ステータス') }}</label>
 
                             <div class="col-6">
-                                    <input id="status" class="align-bottom" type="checkbox" name="status" {{ old('status', session('status')) ? 'checked' : '' }}>
+                                    <input id="status" class="align-bottom" type="checkbox" name="status" {{ old('status', session('update-post.status')) ? 'checked' : '' }}>
                             </div>
                         </div>
 

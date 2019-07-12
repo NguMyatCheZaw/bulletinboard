@@ -26,7 +26,7 @@
                                 <a class="btn btn-primary rounded-0 my-2 px-2" href="{{ route('post.upload.index') }}" style="width: 100px;">{{ __('アップロード') }}</a>
                                 <a class="btn btn-primary rounded-0 my-2 px-2" href="{{ route('post.download') }}" style="width: 100px;">{{ __('ダウンロード') }}</a>
                             </div>
-                            @if ($posts->count() > 0)
+                            @if ($posts !== null && $posts->count() > 0)
                             <div class="table-responsive">
                                 <table class="table table-bordered table-sm">
                                     <thead class="thead-light">

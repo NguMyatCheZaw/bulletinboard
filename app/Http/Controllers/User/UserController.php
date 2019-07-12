@@ -56,7 +56,7 @@ class UserController extends Controller
     public function prepareRegisterForm(Request $request)
     {
         //clear the previous user registration info stored on session.
-        $this->userServiceInterface->clear($request);
+        $this->userServiceInterface->clear($request, ['register-info', 'profile-path', 'profile-extension']);
 
         return redirect()->route('register');
     }
@@ -109,7 +109,11 @@ class UserController extends Controller
      */
     public function create(Request $request)
     {
-        $user = $this->userServiceInterface->create($request);
+        $result = $this->userServiceInterface->create($request);
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
 
         return redirect($this->redirectTo);
     }
@@ -123,7 +127,13 @@ class UserController extends Controller
     public function getList(Request $request)
     {
         $this->userServiceInterface->clearSearch($request);
-        $users = $this->userServiceInterface->getUserList();
+        $result = $this->userServiceInterface->getUserList();
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
+
+        $users = $result['data'];
 
         return view('user.userlist', ['users' => $users]);
     }
@@ -147,7 +157,7 @@ class UserController extends Controller
             if ($request->filled('createdfrom') && $request->filled('createdto')) {
                 if ($request->input('createdto') <= $request->input('createdfrom')) {
                     //from-date is greater than to-date
-                    $validator->errors()->add('createdfrom', '(から)日付は(に)日付より大きくなければなりません。');
+                    $validator->errors()->add('createdfrom', config('constants.errors.from_to'));
                 }
 
             }
@@ -155,7 +165,13 @@ class UserController extends Controller
         if ($validator->fails()) {
             return redirect()->back()->withInput()->withErrors($validator);
         }
-        $users = $this->userServiceInterface->search($request);
+        $result = $this->userServiceInterface->search($request);
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
+
+        $users = $result['data'];
 
         return view('user.userlist', ['users' => $users]);
     }
@@ -169,7 +185,13 @@ class UserController extends Controller
      */
     public function showProfile(Request $request, $id)
     {
-        $user = $this->userServiceInterface->showProfile($request, $id);
+        $result = $this->userServiceInterface->showProfile($request, $id);
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
+
+        $user = $result['data'];
 
         return view('user.profile', ['user' => $user]);
     }
@@ -183,7 +205,12 @@ class UserController extends Controller
      */
     public function prepareUpdateForm(Request $request, $id)
     {
-        $user = $this->userServiceInterface->prepareUpdateForm($request, $id);
+        $result = $this->userServiceInterface->prepareUpdateForm($request, $id);
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
+
         return view('user.update');
     }
 
@@ -196,8 +223,8 @@ class UserController extends Controller
     public function updateConfirm(Request $request)
     {
         Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:users,name,' . session('id'),
-            'email' => 'required|string|email|max:255|unique:users,email,' . session('id'),
+            'name' => 'required|string|max:255|unique:users,name,' . session('update-info.id'),
+            'email' => 'required|string|email|max:255|unique:users,email,' . session('update-info.id'),
             'type' => 'required',
             'phone' => 'required|numeric',
             'address' => 'nullable|string|max:255',
@@ -219,7 +246,11 @@ class UserController extends Controller
      */
     public function update(Request $request)
     {
-        $this->userServiceInterface->update($request);
+        $result = $this->userServiceInterface->update($request);
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
 
         if (Auth::user()->type) {
             return redirect('/profile/' . Auth::id());
@@ -236,7 +267,11 @@ class UserController extends Controller
      */
     public function delete($id)
     {
-        $this->userServiceInterface->delete($id);
+        $result = $this->userServiceInterface->delete($id);
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
 
         return redirect()->back();
     }
@@ -256,22 +291,26 @@ class UserController extends Controller
 
         $validator->after(function ($validator) use ($request) {
             if (!(Hash::check($request->input('current-password'), Auth::user()->password))) {
-                $validator->errors()->add('current-password', 'Yor current password does not match.');
+                $validator->errors()->add('current-password', config('constants.errors.password_fail'));
             } elseif (strcmp($request->input('current-password'), $request->input('new-password')) == 0) {
                 //Current password and new password are same
-                $validator->errors()->add('new-password', 'Current and new password should not be same. Please choose a different password.');
+                $validator->errors()->add('new-password', config('constants.errors.password_same'));
             }
 
             if (strcmp($request->input('new-password'), $request->input('new-password-confirmation')) != 0) {
-                //Current password and new password are same
-                $validator->errors()->add('new-password', 'The new password confirmation does not match.');
+                //Password confirmation fails
+                $validator->errors()->add('new-password', config('constants.errors.password_confirm'));
             }
         });
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator);
         }
 
-        $this->userServiceInterface->changePassword($request->input('new-password'));
+        $result = $this->userServiceInterface->changePassword($request->input('new-password'));
+
+        if ($result['status'] == -9) {
+            return view('error', compact('result'));
+        }
 
         if (Auth::user()->type) {
             return redirect('/profile/' . Auth::id());

@@ -13,7 +13,7 @@
 
                         <div class="form-group row">
                             <div class="col-5 offset-4 offset-sm-5 offset-lg-7 mb-3">
-                                <figure><img class="rounded" src="{{ asset('storage/image/'.session('profile')) }}" width="150px" height="150px" /></figure>
+                                <figure><img class="rounded" src="{{ asset(session('profile-path')) }}" width="150px" height="150px" /></figure>
                             </div>
 
                             <div class="w-100"></div>
@@ -21,7 +21,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('ユーザー名') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('name', '') }}</label>
+                                <label class="col-form-label">{{ session('register-info.name', '') }}</label>
                             </div>
                         </div>
 
@@ -29,7 +29,7 @@
                             <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('メールアドレス') }}</label>
 
                             <div class="col-md-6 bg-light py-2">
-                                <a href="/">{{ session('email', '') }}</a>
+                                <a href="/">{{ session('register-info.email', '') }}</a>
                             </div>
                         </div>
 
@@ -38,8 +38,10 @@
 
                             <div class="col-md-6 bg-light">
                                 <label class="col-form-label">
-                                    @if (!empty(session('password')))
-                                        <?php echo preg_replace("|.|", "*", session('password')); ?>
+                                    @if (!empty(session('register-info.password')))
+                                        @php
+                                            echo preg_replace("|.|", "*", session('register-info.password'));
+                                        @endphp
                                     @endif
                                 </label>
                             </div>
@@ -49,7 +51,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('ユーザー役割') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('type', '') ? 'メンバー' : '管理者' }}</label>
+                                <label class="col-form-label">{{ session('register-info.type', '') ? 'メンバー' : '管理者' }}</label>
                             </div>
                         </div>
 
@@ -57,7 +59,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('電話番号') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('phone', '') }}</label>
+                                <label class="col-form-label">{{ session('register-info.phone', '') }}</label>
                             </div>
                         </div>
 
@@ -65,7 +67,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('誕生日') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <label class="col-form-label">{{ session('dob', '') }}</label>
+                                <label class="col-form-label">{{ session('register-info.dob', '') }}</label>
                             </div>
                         </div>
 
@@ -73,7 +75,7 @@
                             <label class="col-md-4 col-form-label text-md-right">{{ __('住所') }}</label>
 
                             <div class="col-md-6 bg-light">
-                                <address class="col-form-label">{{ session('address', '') }}</address>
+                                <address class="col-form-label">{{ session('register-info.address', '') }}</address>
                             </div>
                         </div>
 
